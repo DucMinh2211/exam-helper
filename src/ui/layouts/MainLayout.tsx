@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Link, Outlet } from 'react-router-dom';
-import { Book, FileText, LayoutDashboard } from 'lucide-react';
+import { Book, FileText, LayoutDashboard, FileCog } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -24,43 +24,44 @@ const MainLayout: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex flex-1 container mx-auto py-6 relative">
-        {/* Sidebar Placeholder to reserve space in flow */}
-        <div className="w-20 shrink-0" />
+      <div className="flex flex-1 container mx-auto py-6 gap-6 relative">
+        {/* Sidebar Space Holder (giữ khoảng cách) */}
+        <div className={`shrink-0 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`} />
 
-        {/* Floating Sidebar */}
+        {/* Floating Sidebar (Hiệu ứng hover) */}
         <aside 
-          className={`absolute left-0 top-6 h-[calc(100%-3rem)] flex flex-col gap-2 bg-white shadow-xl rounded-r-xl transition-all duration-300 ease-in-out z-10 overflow-hidden ${
-            isSidebarOpen ? 'w-64' : 'w-20 bg-transparent shadow-none'
+          className={`absolute left-0 top-6 h-[calc(100%-3rem)] bg-white shadow-xl rounded-r-xl transition-all duration-300 ease-in-out z-10 overflow-hidden border border-gray-100 ${
+            isSidebarOpen ? 'w-64' : 'w-20'
           }`}
           onMouseEnter={() => setIsSidebarOpen(true)}
           onMouseLeave={() => setIsSidebarOpen(false)}
-          onClick={() => setIsSidebarOpen(true)}
         >
-          <div className={`flex flex-col gap-2 ${isSidebarOpen ? 'p-3' : 'py-3 items-center'}`}>
-            <NavLink 
-              to="/" 
-              className={getNavLinkClass}
-              end
-            >
+          <div className={`flex flex-col gap-2 p-3 ${!isSidebarOpen && 'items-center'}`}>
+            <NavLink to="/" className={getNavLinkClass} end>
               <LayoutDashboard size={24} className="shrink-0" />
-              <span className={`transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
-                Dashboard
+              <span className={`transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>
+                Trang Chủ
               </span>
             </NavLink>
-            <NavLink 
-              to="/exams" 
-              className={getNavLinkClass}
-            >
+
+            <NavLink to="/seeds" className={getNavLinkClass}>
+              <FileCog size={24} className="shrink-0" />
+              <span className={`transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>
+                Mẫu đề thi
+              </span>
+            </NavLink>
+
+            <NavLink to="/exams" className={getNavLinkClass}>
               <FileText size={24} className="shrink-0" />
-              <span className={`transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
+              <span className={`transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>
                 Đề thi
               </span>
             </NavLink>
           </div>
         </aside>
 
-        <main className="flex-1 bg-white rounded-xl shadow-sm p-6 ml-6">
+        {/* Main Content */}
+        <main className="flex-1 bg-white rounded-xl shadow-sm p-6 overflow-x-hidden">
           <Outlet />
         </main>
       </div>

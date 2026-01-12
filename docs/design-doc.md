@@ -1,4 +1,5 @@
 
+
 # THIẾT KẾ DỰ ÁN (Design Document)
 ## 1. Tổng quan dự án
 ### 1.1. Bối cảnh
@@ -68,7 +69,7 @@ Giáo viên nhập ngân hàng câu hỏi từ 1 tệp (.json, .csv, .xlxs, ...)
 ### 3.4. Tạo đề thi từ ngân hàng câu hỏi
 Giáo viên tạo 1 đề thi, có thể chọn câu hỏi ngẫu nhiên (tùy chỉnh số lượng câu hỏi) hoặc câu hỏi tùy ý trong ngân hàng câu hỏi. Câu hỏi có thể được phân loại theo các nhãn (`tag`) và số lượng câu hỏi theo nhãn có thể được tùy chỉnh nếu tạo ngẫu nhiên. Tỉ lệ tạo đề thi thành công là 99%, đề thi được tạo xong sẽ hiển thị trong vòng 5s
 ### 3.5. Xuất đề thi ra tệp
-Đề thi được tạo xong có thể xuất ra tệp (.pdf, .docx, ...). Tỉ lệ thành công là 95%, tệp được xuất trong vòng 5s.
+Đề thi được tạo xong có thể xuất ra tệp (.pdf, .docx, .json). Tỉ lệ thành công là 95%, tệp được xuất trong vòng 5s.
 
 ## 4. Yêu cầu phi chức năng (Non-functional Requirements)
 
@@ -88,15 +89,16 @@ Teacher{{"Giáo Viên <br> ((Actor))"}}
 CreateBank([Tạo Ngân Hàng câu hỏi])
 ImportBank([Nhập Ngân Hàng câu hỏi])
 ExportBank([Xuất Ngân Hàng câu hỏi])
-GenExam([Tạo Đề Thi])
-ExportExam([Nhập Đề Thi])
+CreateExamSeed([Tạo Mẫu Đề Thi])
+EditExamSeed([Chỉnh sửa/Xóa Mẫu Đề Thi])
+CreateExam([Tạo Đề Thi])
+EditExam([Chỉnh sửa/Xóa Đề Thi])
+ExportExam([Xuất Đề Thi])
 
 CreateQuestion([Tạo Câu Hỏi])
 TagQuestion([Gán nhãn Câu Hỏi])
 FilterQuestion([Lọc Câu Hỏi])
 FindQuestion([Tìm Câu Hỏi])
-
-CreateBlock([Tạo 'Khối' Câu Hỏi])
 
 %% Connection
 Teacher --- CreateBank -.->|"<< include >>"| CreateQuestion
@@ -105,8 +107,10 @@ FilterQuestion -.->|"<< extends >>"| CreateBank
 FindQuestion -.->|"<< extends >>"| CreateBank
 Teacher --- ImportBank
 Teacher --- ExportBank
-Teacher --- GenExam
-CreateBlock -.->|"<< extends >>"| GenExam
+Teacher --- CreateExamSeed
+Teacher --- CreateExam
+Teacher --- EditExamSeed
+Teacher --- EditExam
 Teacher --- ExportExam
 ```
 #### 5.2.1. Tạo Ngân Hàng Câu Hỏi
@@ -148,7 +152,7 @@ Teacher --- ExportExam
 | Alternative Flow | (2) A1. Sau khi tạo xong nhãn, người dùng có thể ấn nút "X" bên cạnh nhãn để xóa nhãn.                               |
 | Exception Flow   |                                                                                                                      |
 #### 5.2.4. Xuất Ngân Hàng
-| ID               | UC-Teacher-003                                                                                                   |
+| ID               | UC-Teacher-004                                                                                                   |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
 | Use-case         | Xuất Ngân Hàng                                                                                                   |
 | Actor            | Giáo Viên (Teacher)                                                                                              |
@@ -160,7 +164,7 @@ Teacher --- ExportExam
 | Alternative Flow |                                                                                                                  |
 | Exception Flow   | E1. Trình duyệt không hỗ trợ lưu file; hiện lỗi lên.                                                             |
 #### 5.2.5. Nhập Ngân Hàng
-| ID               | UC-Teacher-003                                                                                                 |
+| ID               | UC-Teacher-005                                                                                                 |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
 | Use-case         | Nhập Ngân Hàng                                                                                                 |
 | Actor            | Giáo Viên (Teacher)                                                                                            |
@@ -171,37 +175,120 @@ Teacher --- ExportExam
 | Normal Flow      | 1. Hiển thị cửa sổ chọn file.<br>2. Người dùng chọn đường dẫn tới file.<br>3. Nhập dữ liệu vô IndexDB từ file. |
 | Alternative Flow |                                                                                                                |
 | Exception Flow   | E1. Trình duyệt không hỗ trợ nhập file; hiện lỗi lên.                                                          |
+#### 5.2.6. Tạo đề thi
+
+| ID               | UC-Teacher-006                                                                                                                                                                                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Use-case         | Chỉnh sửa đề thi                                                                                                                                                                                                                                               |
+| Actor            | Giáo Viên (Teacher)                                                                                                                                                                                                                                            |
+| Description      | Giáo Viên tạo Đề Thi.                                                                                                                                                                                                                                          |
+| Pre-condition    | Đang ở trang Đề Thi.                                                                                                                                                                                                                                           |
+| Post-condition   | Dữ liệu Đề Thi được lưu vào trong IndexDB.                                                                                                                                                                                                                     |
+| Trigger          | Ấn  "Tạo Đề Thi" trong trang Đề Thi.                                                                                                                                                                                                                           |
+| Normal Flow      | 1. Điền thông tin của Đề Thi (tên đề).<br>2. Chọn Tạo Thủ Công hoặc Tạo Dùng Mẫu Đề Thi (nếu có mẫu).<br>3. Nếu tạo Thủ Công thì tạo 1 đề thi rỗng để chỉnh sửa sau đó; nếu tạo Dùng Mẫu thì cho người dùng chọn 1 Mẫu Đề Thi rồi sinh Đề Thi dưa trên mẫu đó. |
+| Alternative Flow |                                                                                                                                                                                                                                                                |
+| Exception Flow   | E1. Dung lượng bộ nhớ trình duyệt đầy; hiện lỗi lên.<br>E2. Trình duyệt không hỗ trợ IndexedDB; hiện lỗi lên, yêu cầu người dùng đổi sang trình duyệt mới hơn.                                                                                                 |
+#### 5.2.7. Chỉnh sửa đề thi
+
+| ID               | UC-Teacher-007                                                                                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Use-case         | Chỉnh sửa đề thi                                                                                                                                               |
+| Actor            | Giáo Viên (Teacher)                                                                                                                                            |
+| Description      | Giáo Viên chỉnh sửa 1 Đề Thi có sẵn.                                                                                                                           |
+| Pre-condition    | Đang ở trang Đề Thi và Có ít nhất 1 Đề Thi trong IndexDB.                                                                                                      |
+| Post-condition   | Dữ liệu Đề Thi được lưu vào trong IndexDB.                                                                                                                     |
+| Trigger          | Ấn vào 1 thẻ Đề Thi trong trang Đề Thi.                                                                                                                        |
+| Normal Flow      | 1. Thêm/Xóa các Ngân Hàng để sử dụng.<br>2. Thêm/Xóa các câu hỏi có ở trong các Ngân Hàng khả dụng của Đề Thi này (bước 1). <br>3. Lưu Đề Thi.                 |
+| Alternative Flow | (2) A1. Có thể lọc câu hỏi theo nhãn (Tag).                                                                                                                    |
+| Exception Flow   | E1. Dung lượng bộ nhớ trình duyệt đầy; hiện lỗi lên.<br>E2. Trình duyệt không hỗ trợ IndexedDB; hiện lỗi lên, yêu cầu người dùng đổi sang trình duyệt mới hơn. |
+#### 5.2.8. Tạo Mẫu Đề Thi
+| ID               | UC-Teacher-008                                                                                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Use-case         | Tạo Mẫu đề thi                                                                                                                                                 |
+| Actor            | Giáo Viên (Teacher)                                                                                                                                            |
+| Description      | Giáo Viên tạo Mẫu Đề Thi.                                                                                                                                      |
+| Pre-condition    | Đang ở trang Mẫu Đề Thi.                                                                                                                                       |
+| Post-condition   | Dữ liệu Mẫu Đề Thi được lưu vào trong IndexDB.                                                                                                                 |
+| Trigger          | Ấn "Tạo Mẫu" trong trang Đề Thi.                                                                                                                               |
+| Normal Flow      | 1. Điền thông tin của Mẫu Đề Thi (tên Mẫu).<br>2. Lưu Mẫu Đề Thi.                                                                                              |
+| Alternative Flow |                                                                                                                                                                |
+| Exception Flow   | E1. Dung lượng bộ nhớ trình duyệt đầy; hiện lỗi lên.<br>E2. Trình duyệt không hỗ trợ IndexedDB; hiện lỗi lên, yêu cầu người dùng đổi sang trình duyệt mới hơn. |
+#### 5.2.9. Chỉnh Sửa Mẫu Đề Thi
+| ID               | UC-Teacher-008                                                                                                                                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Use-case         | Chỉnh Sửa Mẫu Đề Thi                                                                                                                                                                                            |
+| Actor            | Giáo Viên (Teacher)                                                                                                                                                                                             |
+| Description      | Giáo Viên chỉnh sửa Mẫu Đề Thi.                                                                                                                                                                                 |
+| Pre-condition    | Đang ở trang Mẫu Đề Thi và có ít nhất 1 mẫu.                                                                                                                                                                    |
+| Post-condition   | Dữ liệu Mẫu Đề Thi được lưu vào trong IndexDB.                                                                                                                                                                  |
+| Trigger          | Ấn vào 1 thẻ Mẫu Đề Thi trong trang Đề Thi.                                                                                                                                                                     |
+| Normal Flow      | 1. Chỉnh sửa thông tin Mẫu (tên).<br>2. Thêm/Xóa các Ngân Hàng Câu Hỏi để sử dụng.<br>3. Thêm/Xóa các Khối Câu Hỏi.<br>4. Chỉnh sửa các Khối Câu Hỏi (số lượng câu, các nhãn để sinh Đề).<br>5. Lưu Mẫu Đề Thi. |
+| Alternative Flow |                                                                                                                                                                                                                 |
+| Exception Flow   | E1. Dung lượng bộ nhớ trình duyệt đầy; hiện lỗi lên.<br>E2. Trình duyệt không hỗ trợ IndexedDB; hiện lỗi lên, yêu cầu người dùng đổi sang trình duyệt mới hơn.                                                  |
 ### Sơ đồ cấu trúc (Structural Diagram)
 ### 6.1. Class Diagram
-#### 6.1.1. Data Classes
+#### 6.1.1. Entities Classes
 
 ```mermaid
 classDiagram
 
 class Bank {
-	+ questions: @final List~Question~
+	+ id: @final string
+	+ name: @final string
+	+ description?: @final string
+	+ createdAt: @final number
+	+ updatedAt: @final number
 }
 
 class Question {
+	+ id: @final string
+	+ bankId: @final string
+	+ type: @final QuestionType
 	+ title: @final string
 	+ content: @final string
+	+ tags: @final List~string~
+	+ createdAt: @final number
 }
 
 class MCQuestion {
+	+ type: @final StringLiteral = "MULTIPLE_CHOICE"
 	+ choices: @final List~string~ 
-	+ answer: @final int
+	+ answer: @final number
+}
+
+
+class Exam {
+	+ id: @final string
+	+ name: @final string
+	+ banks: @final List~BankId~
+	+ questions: @final List~QuestionId~
+}
+
+class QuestionBlock {
+	+ numQuestions: @final number
+	+ tags: @final List~string~
+}
+
+class ExamSeed {
+	+ id: @final string
+	+ name: @final string
+	+ banks: @final List~BankId~
+	+ questionBlocks: @final List~QuestionBlock~
 }
 
 %% Connection
-Bank "1" *-- "*" Question
-MCQuestion --|> Question
+Bank "1" <.. "*" Question : reference
+MCQuestion --* Question
+
+ExamSeed "1" *-- "*" QuestionBlock
+ExamSeed ..> Exam : used to generate
 
 ```
 #### 6.1.2. Logic Classes
 ```mermaid
 classDiagram
 
-class ExamDocxGenerator {
+class QuestionBlock {
 	+ generate()
 }
 ```
@@ -243,3 +330,4 @@ exam-helper/
 ├── vite.config.ts          # Cấu hình Vite & PWA Plugin
 └── package.json
 ```
+
