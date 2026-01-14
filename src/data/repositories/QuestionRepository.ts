@@ -7,6 +7,10 @@ export const QuestionRepository = {
     return db.questions.where('bankId').equals(bankId).reverse().sortBy('createdAt');
   },
 
+  async getByQuestionIds(ids: string[]): Promise<Question[]> {
+    return db.questions.where('id').anyOf(ids).toArray();
+  },
+
   async create(questionData: Omit<Question | MCQuestion | TFQuestion | EssayQuestion, 'id' | 'createdAt'>): Promise<Question> {
     const question = {
       ...questionData,
@@ -16,6 +20,11 @@ export const QuestionRepository = {
     
     await db.questions.add(question);
     return question;
+  },
+
+  // Hàm này dùng để import, giữ nguyên ID từ file
+  async save(question: Question): Promise<void> {
+    await db.questions.put(question);
   },
 
   async update(id: string, updates: Partial<Question>): Promise<void> {

@@ -6,6 +6,7 @@ import ExamSeedList from './ui/pages/ExamSeed/ExamSeedList';
 import ExamSeedEditor from './ui/pages/ExamSeed/ExamSeedEditor';
 import ExamList from './ui/pages/Exam/ExamList';
 import ExamDetail from './ui/pages/Exam/ExamDetail';
+import SettingsPage from './ui/pages/Settings/SettingsPage';
 
 function App() {
   return (
@@ -20,6 +21,8 @@ function App() {
 
           <Route path="exams" element={<ExamList />} />
           <Route path="exams/:id" element={<ExamDetail />} />
+          
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </Router>

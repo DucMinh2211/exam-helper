@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, FileText, Play } from 'lucide-react';
 import { ExamService } from '../../../core/services/ExamService';
 import type { Exam } from '../../../core/entities/Exam';
+import CreateExamModal from './CreateExamModal';
 
 const ExamList: React.FC = () => {
   const [exams, setExams] = useState<Exam[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadExams();
@@ -20,6 +23,16 @@ const ExamList: React.FC = () => {
     if (window.confirm('Xóa đề thi này?')) {
       await ExamService.deleteExam(id);
       loadExams();
+    }
+  };
+
+  const handleCreateManual = async (name: string, bankIds: string[]) => {
+    try {
+      const newExam = await ExamService.createManualExam(name, bankIds);
+      setIsModalOpen(false);
+      navigate(`/exams/${newExam.id}`);
+    } catch (error) {
+      alert('Có lỗi xảy ra khi tạo đề thi.');
     }
   };
 
@@ -38,13 +51,13 @@ const ExamList: React.FC = () => {
             <Play size={18} />
             <span>Sinh đề từ mẫu</span>
           </Link>
-          {/* <Link 
-            to="/exams/new"
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-bold"
           >
             <Plus size={20} />
             <span>Tạo thủ công</span>
-          </Link> */}
+          </button>
         </div>
       </div>
 
@@ -81,14 +94,24 @@ const ExamList: React.FC = () => {
               <FileText className="text-gray-300" size={32} />
             </div>
             <p className="text-gray-500 font-medium">Chưa có đề thi nào.</p>
-            <div className="mt-4">
-              <Link to="/seeds" className="text-blue-600 font-bold hover:underline">
-                Tạo đề thi từ mẫu ngay &rarr;
+            <div className="mt-4 flex justify-center gap-4">
+               <button onClick={() => setIsModalOpen(true)} className="text-blue-600 font-bold hover:underline">
+                 Tạo thủ công
+               </button>
+               <span className="text-gray-300">|</span>
+               <Link to="/seeds" className="text-blue-600 font-bold hover:underline">
+                Tạo từ mẫu
               </Link>
             </div>
           </div>
         )}
       </div>
+      
+      <CreateExamModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={handleCreateManual}
+      />
     </div>
   );
 };

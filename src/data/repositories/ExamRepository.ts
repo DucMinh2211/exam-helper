@@ -22,6 +22,11 @@ export const ExamRepository = {
     await db.exams.add(exam);
     return exam;
   },
+  
+  // Hàm này dùng để import, giữ nguyên ID từ file
+  async save(exam: Exam): Promise<void> {
+    await db.exams.put(exam);
+  },
 
   async update(id: string, updates: Partial<Exam>): Promise<void> {
     await db.exams.update(id, {

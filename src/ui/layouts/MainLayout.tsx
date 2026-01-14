@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { NavLink, Link, Outlet } from 'react-router-dom';
-import { Book, FileText, LayoutDashboard, FileCog } from 'lucide-react';
+import { NavLink, Outlet, Link } from 'react-router-dom';
+import { Book, FileText, LayoutDashboard, FileCog, Settings } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,12 +25,12 @@ const MainLayout: React.FC = () => {
       </header>
 
       <div className="flex flex-1 container mx-auto py-6 gap-6 relative">
-        {/* Sidebar Space Holder (giữ khoảng cách) */}
+        {/* Sidebar Space Holder */}
         <div className={`shrink-0 transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`} />
 
-        {/* Floating Sidebar (Hiệu ứng hover) */}
+        {/* Floating Sidebar */}
         <aside 
-          className={`absolute left-0 top-6 h-[calc(100%-3rem)] bg-white shadow-xl rounded-r-xl transition-all duration-300 ease-in-out z-10 overflow-hidden border border-gray-100 ${
+          className={`absolute left-0 top-6 h-[calc(100%-3rem)] bg-white shadow-xl rounded-r-xl transition-all duration-300 ease-in-out z-10 overflow-hidden border border-gray-100 flex flex-col justify-between ${
             isSidebarOpen ? 'w-64' : 'w-20'
           }`}
           onMouseEnter={() => setIsSidebarOpen(true)}
@@ -55,6 +55,15 @@ const MainLayout: React.FC = () => {
               <FileText size={24} className="shrink-0" />
               <span className={`transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>
                 Đề thi
+              </span>
+            </NavLink>
+          </div>
+
+          <div className={`p-3 border-t ${!isSidebarOpen && 'items-center flex flex-col'}`}>
+            <NavLink to="/settings" className={getNavLinkClass}>
+              <Settings size={24} className="shrink-0" />
+              <span className={`transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>
+                Cài đặt & Dữ liệu
               </span>
             </NavLink>
           </div>
