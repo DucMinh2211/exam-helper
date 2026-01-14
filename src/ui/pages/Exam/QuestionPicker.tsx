@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Filter, Plus } from 'lucide-react';
+import { X, Search, Plus } from 'lucide-react';
 import type { Question } from '../../../core/entities/Question';
 
 interface Props {

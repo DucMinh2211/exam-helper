@@ -131,10 +131,10 @@ export const ExportService = {
           const tableRows = [
             new TableRow({
               children: [
-                new TableCell({ children: [new Paragraph({ text: "Ý", bold: true, alignment: AlignmentType.CENTER })], width: { size: 10, type: WidthType.PERCENTAGE } }),
-                new TableCell({ children: [new Paragraph({ text: "Nội dung", bold: true })], width: { size: 60, type: WidthType.PERCENTAGE } }),
-                new TableCell({ children: [new Paragraph({ text: "Đúng", bold: true, alignment: AlignmentType.CENTER })], width: { size: 15, type: WidthType.PERCENTAGE } }),
-                new TableCell({ children: [new Paragraph({ text: "Sai", bold: true, alignment: AlignmentType.CENTER })], width: { size: 15, type: WidthType.PERCENTAGE } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Ý", bold: true })], alignment: AlignmentType.CENTER })], width: { size: 10, type: WidthType.PERCENTAGE } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Nội dung", bold: true })] })], width: { size: 60, type: WidthType.PERCENTAGE } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Đúng", bold: true })], alignment: AlignmentType.CENTER })], width: { size: 15, type: WidthType.PERCENTAGE } }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Sai", bold: true })], alignment: AlignmentType.CENTER })], width: { size: 15, type: WidthType.PERCENTAGE } }),
               ],
             }),
             ...tfQ.choices.map((choice, i) => 

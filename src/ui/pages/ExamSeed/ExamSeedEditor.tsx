@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, Trash2, Tag as TagIcon, Layers, Info } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, Layers, Info } from 'lucide-react';
 import { BankService } from '../../../core/services/BankService';
 import { ExamSeedService } from '../../../core/services/ExamSeedService';
 import { QuestionService } from '../../../core/services/QuestionService';
 import type { Bank } from '../../../core/entities/Bank';
-import type { ExamSeed, QuestionBlock } from '../../../core/entities/ExamSeed';
+import type { QuestionBlock } from '../../../core/entities/ExamSeed';
 import { v4 as uuidv4 } from 'uuid';
 
 const ExamSeedEditor: React.FC = () => {

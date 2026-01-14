@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Calendar, Printer, Edit, Plus, Trash2, Save, X, Download, FileJson, FileType } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, Printer, Edit, Plus, Trash2, Save, Download, FileJson, FileType } from 'lucide-react';
 import { ExamService } from '../../../core/services/ExamService';
 import { ExportService } from '../../../core/services/ExportService';
 import type { Exam } from '../../../core/entities/Exam';

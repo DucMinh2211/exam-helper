@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Upload, MoreVertical, FileJson, FileSpreadsheet, Download } from 'lucide-react';
+import { Plus, Trash2, Upload, MoreVertical, FileJson, FileSpreadsheet } from 'lucide-react';
 import { BankService } from '../../../core/services/BankService';
 import { BankExportImportService } from '../../../core/services/BankExportImportService';
 import type { Bank } from '../../../core/entities/Bank';
