@@ -12,11 +12,11 @@ Cho phép người dùng tải file DOCX lên, tự động nhận diện format
 - [x] Cho phép chọn hoặc kéo-thả file `.docx`; kiểm tra loại file và giới hạn dung lượng.
 - [x] Hiển thị tiến trình: đọc file → nhận diện format → parse → kiểm tra dữ liệu.
 - [x] Hiển thị bản xem trước theo `Chủ đề → Bài → Phần → Câu hỏi`.
-- [ ] Đánh dấu rõ câu hỏi, lựa chọn hoặc đáp án bị thiếu, sai format hay có độ tin cậy thấp.
-- [ ] Cho phép người dùng sửa trực tiếp từng lỗi và xem nội dung DOCX gốc tương ứng.
+- [x] Đánh dấu rõ câu hỏi, lựa chọn hoặc đáp án bị thiếu, sai format hay có độ tin cậy thấp.
+- [x] Cho phép người dùng sửa trực tiếp từng lỗi và xem nội dung DOCX gốc tương ứng.
 - [ ] Có thao tác **Xác nhận** cho từng lỗi và **Xác nhận tất cả mục hợp lệ**.
-- [ ] Chỉ bật nút **Import** khi không còn lỗi bắt buộc chưa được xác nhận.
-- [ ] Hiển thị tổng kết trước khi import: số câu hợp lệ, số câu đã sửa, số câu bỏ qua và số cảnh báo còn lại.
+- [x] Chỉ bật nút **Import** khi không còn lỗi bắt buộc chưa được xác nhận.
+- [x] Hiển thị tổng kết trước khi import: số câu hợp lệ, số câu đã sửa, số câu bỏ qua và số cảnh báo còn lại.
 - [ ] Import vào bank mới hoặc bank hiện tại theo lựa chọn của người dùng.
 
 ### Parser foundation
@@ -44,15 +44,16 @@ Cho phép người dùng tải file DOCX lên, tự động nhận diện format
 
 ### Màn hình validate và confirm
 
-- [ ] Phân loại trạng thái: `valid`, `warning`, `error`, `confirmed` và `skipped`.
-- [ ] Bộ lọc để chỉ xem các mục cần xử lý.
-- [ ] Hiển thị lý do cảnh báo và gợi ý sửa, không âm thầm thay đổi dữ liệu.
-- [ ] Cho phép sửa loại câu hỏi, số câu, nội dung, lựa chọn và đáp án.
-- [ ] Khi người dùng sửa, chạy validation lại ngay cho câu đó.
-- [ ] Lưu quyết định xác nhận trong phiên import để không mất khi chuyển bước.
-- [ ] Yêu cầu xác nhận rõ ràng nếu người dùng muốn bỏ qua câu lỗi.
-- [ ] Không ghi vào IndexedDB trước bước xác nhận cuối cùng.
-- [ ] Import trong transaction; nếu có lỗi ghi dữ liệu thì rollback toàn bộ.
+- [x] Phân loại trạng thái: `valid`, `warning`, `error`, `confirmed` và `skipped`.
+- [x] Bộ lọc để chỉ xem các mục cần xử lý.
+- [x] Hiển thị lý do cảnh báo và gợi ý sửa, không âm thầm thay đổi dữ liệu.
+- [x] Cho phép sửa loại câu hỏi, số câu, nội dung, lựa chọn và đáp án.
+- [x] Khi người dùng sửa, chạy validation lại ngay cho câu đó.
+- [x] Lưu quyết định xác nhận trong phiên import để không mất khi chuyển bước.
+- [x] Yêu cầu xác nhận rõ ràng nếu người dùng muốn bỏ qua câu lỗi.
+- [x] Cho phép bỏ qua tất cả câu lỗi trong một thao tác, có xác nhận rõ ràng.
+- [x] Không ghi vào IndexedDB trước bước xác nhận cuối cùng.
+- [x] Import trong transaction; nếu có lỗi ghi dữ liệu thì rollback toàn bộ.
 
 ### Kiến trúc mở rộng và AI tùy chọn
 
@@ -66,7 +67,7 @@ Cho phép người dùng tải file DOCX lên, tự động nhận diện format
 ### Điều kiện hoàn thành
 
 - [ ] File mẫu được parse thành đúng hai loại câu hỏi và ghép đúng bảng đáp án theo từng bài.
-- [ ] Mọi dữ liệu không chắc chắn đều xuất hiện trong màn hình review với vị trí nguồn tương ứng.
-- [ ] Không thể import khi còn lỗi bắt buộc chưa được sửa, xác nhận hoặc bỏ qua.
+- [x] Mọi dữ liệu không chắc chắn đều xuất hiện trong màn hình review với vị trí nguồn tương ứng.
+- [x] Không thể import khi còn lỗi bắt buộc chưa được sửa, xác nhận hoặc bỏ qua.
 - [ ] Thêm một format DOCX mới chỉ cần tạo parser và fixture mới.
 - [ ] Build, lint và các parser test đều chạy thành công.

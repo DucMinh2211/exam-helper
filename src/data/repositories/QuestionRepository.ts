@@ -1,5 +1,5 @@
 import { db } from '../db';
-import type { Question, MCQuestion, TFQuestion, EssayQuestion } from '../../core/entities/Question';
+import type { Question, MCQuestion, TFQuestion, EssayQuestion, NewQuestion } from '../../core/entities/Question';
 import { v4 as uuidv4 } from 'uuid';
 
 export const QuestionRepository = {
@@ -25,6 +25,20 @@ export const QuestionRepository = {
   // Hàm này dùng để import, giữ nguyên ID từ file
   async save(question: Question): Promise<void> {
     await db.questions.put(question);
+  },
+
+  async importMany(questionData: NewQuestion[]): Promise<Question[]> {
+    return db.transaction('rw', db.questions, async () => {
+      const timestamp = Date.now();
+      const questions = questionData.map((data, index) => ({
+        ...data,
+        id: uuidv4(),
+        // Repository reads newest-first; decreasing timestamps preserve DOCX order.
+        createdAt: timestamp - index,
+      })) as Question[];
+      await db.questions.bulkAdd(questions);
+      return questions;
+    });
   },
 
   async update(id: string, updates: Partial<Question>): Promise<void> {

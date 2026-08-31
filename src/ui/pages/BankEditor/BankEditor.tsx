@@ -211,7 +211,16 @@ const BankEditor: React.FC = () => {
         </button>
       </div>
 
-      {showDocxImport && <ImportDocxPanel onClose={() => setShowDocxImport(false)} />}
+      {showDocxImport && id && (
+        <ImportDocxPanel
+          bankId={id}
+          onClose={() => setShowDocxImport(false)}
+          onImported={async () => {
+            await loadData(id);
+            setShowDocxImport(false);
+          }}
+        />
+      )}
 
       <div className="flex-1 overflow-auto space-y-6 mb-8 pr-2">
         {questions.map((q, idx) => (

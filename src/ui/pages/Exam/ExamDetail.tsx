@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, Calendar, Printer, Edit, Plus, Trash2, Save, Download, FileJson, FileType } from 'lucide-react';
+import { ArrowLeft, FileText, Calendar, Printer, Edit, Plus, Trash2, Save, Download, FileJson, FileType, BookOpen, ListChecks } from 'lucide-react';
 import { ExamService } from '../../../core/services/ExamService';
 import { ExportService } from '../../../core/services/ExportService';
 import type { Exam } from '../../../core/entities/Exam';
 import type { Question, MCQuestion, TFQuestion } from '../../../core/entities/Question';
 import QuestionPicker from './QuestionPicker';
+import ExamAnswerSheet from './ExamAnswerSheet';
 
 const ExamDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +18,7 @@ const ExamDetail: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
+  const [showAnswers, setShowAnswers] = useState(false);
   
   // Export Menu State
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
@@ -67,6 +69,17 @@ const ExamDetail: React.FC = () => {
     loadExam(exam.id);
   };
 
+  const handlePdfExport = (answerSheet: boolean) => {
+    setShowAnswers(answerSheet);
+    setIsExportMenuOpen(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      void ExportService.exportToPdf(
+        answerSheet ? `${exam?.name ?? 'de-thi'}_dap-an` : exam?.name ?? 'de-thi',
+        answerSheet ? 'answer-content' : 'exam-content',
+      );
+    }));
+  };
+
   if (loading) return <div className="p-12 text-center text-gray-500 font-medium">Đang tải đề thi...</div>;
   if (!exam) return <div className="p-12 text-center text-red-500">Không tìm thấy đề thi!</div>;
 
@@ -92,6 +105,13 @@ const ExamDetail: React.FC = () => {
         </div>
         
         <div className="flex gap-2 relative">
+          <button
+            type="button"
+            onClick={() => { setShowAnswers((current) => !current); setIsEditing(false); }}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-bold text-gray-700 transition-colors hover:bg-gray-50"
+          >
+            {showAnswers ? <><BookOpen size={18} /> Xem đề</> : <><ListChecks size={18} /> Xem đáp án</>}
+          </button>
           {/* Export Dropdown */}
           <div className="relative" ref={exportMenuRef}>
             <button 
@@ -102,31 +122,47 @@ const ExamDetail: React.FC = () => {
             </button>
             
             {isExportMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute top-full right-0 mt-2 w-60 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <p className="px-4 pb-1 pt-2 text-[10px] font-black uppercase tracking-wider text-gray-400">Đề thi</p>
                 <button 
                   onClick={() => { ExportService.exportToDocx(exam, questions); setIsExportMenuOpen(false); }}
                   className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-blue-50 hover:text-blue-700 text-gray-700"
                 >
-                  <FileType size={16} className="text-blue-600" /> Xuất ra Word (.docx)
+                  <FileType size={16} className="text-blue-600" /> Word đề thi (.docx)
                 </button>
                 <button 
-                  onClick={() => { ExportService.exportToPdf(exam.name, 'exam-content'); setIsExportMenuOpen(false); }}
+                  onClick={() => handlePdfExport(false)}
                   className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-red-50 hover:text-red-700 text-gray-700"
                 >
-                  <Printer size={16} className="text-red-600" /> Xuất ra PDF
+                  <Printer size={16} className="text-red-600" /> PDF đề thi
                 </button>
+                <div className="my-1 border-t border-gray-100" />
+                <p className="px-4 pb-1 pt-2 text-[10px] font-black uppercase tracking-wider text-gray-400">Đáp án</p>
+                <button
+                  onClick={() => { void ExportService.exportAnswersToDocx(exam, questions); setIsExportMenuOpen(false); }}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-green-50 hover:text-green-700"
+                >
+                  <FileType size={16} className="text-green-600" /> Word đáp án (.docx)
+                </button>
+                <button
+                  onClick={() => handlePdfExport(true)}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-left text-gray-700 hover:bg-purple-50 hover:text-purple-700"
+                >
+                  <Printer size={16} className="text-purple-600" /> PDF đáp án
+                </button>
+                <div className="my-1 border-t border-gray-100" />
                 <button 
                   onClick={() => { ExportService.exportToJson(exam, questions); setIsExportMenuOpen(false); }}
                   className="flex items-center gap-3 w-full px-4 py-2 text-left hover:bg-yellow-50 hover:text-yellow-700 text-gray-700"
                 >
-                  <FileJson size={16} className="text-yellow-600" /> Xuất ra JSON
+                  <FileJson size={16} className="text-yellow-600" /> JSON đầy đủ
                 </button>
               </div>
             )}
           </div>
 
           <button 
-            onClick={() => setIsEditing(!isEditing)} 
+            onClick={() => { setIsEditing(!isEditing); setShowAnswers(false); }}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-colors font-bold ${
               isEditing 
                 ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
@@ -138,8 +174,11 @@ const ExamDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Exam Content (Wrapped with ID for PDF capture) */}
-      <div 
+      {showAnswers ? (
+        <ExamAnswerSheet exam={exam} questions={questions} />
+      ) : (
+      /* Exam Content (Wrapped with ID for PDF capture) */
+      <div
         id="exam-content"
         className={`bg-white border rounded-3xl shadow-sm p-12 print:shadow-none print:border-none print:p-0 relative ${isEditing ? 'border-blue-300 ring-4 ring-blue-50' : ''}`}
       >
@@ -247,6 +286,7 @@ const ExamDetail: React.FC = () => {
           --- Hết ---
         </div>
       </div>
+      )}
       
       {/* Question Picker Drawer */}
       <QuestionPicker 

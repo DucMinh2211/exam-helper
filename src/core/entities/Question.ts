@@ -26,3 +26,8 @@ export interface EssayQuestion extends Question {
   type: 'ESSAY';
   answer?: string; // model answer
 }
+
+export type NewQuestion =
+  | Omit<MCQuestion, 'id' | 'createdAt'>
+  | Omit<TFQuestion, 'id' | 'createdAt'>
+  | Omit<EssayQuestion, 'id' | 'createdAt'>;

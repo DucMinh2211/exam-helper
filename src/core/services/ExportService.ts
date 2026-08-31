@@ -1,9 +1,9 @@
 import { saveAs } from 'file-saver';
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType, HeadingLevel } from 'docx';
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, AlignmentType, HeadingLevel, type FileChild } from 'docx';
 import jsPDF from 'jspdf';
 import { toPng } from 'html-to-image';
 import type { Exam } from '../entities/Exam';
-import type { Question, MCQuestion, TFQuestion } from '../entities/Question';
+import type { Question, MCQuestion, TFQuestion, EssayQuestion } from '../entities/Question';
 
 export const ExportService = {
   // 1. Export JSON
@@ -69,7 +69,7 @@ export const ExportService = {
 
   // 3. Export DOCX
   async exportToDocx(exam: Exam, questions: Question[]) {
-    const docChildren: any[] = [];
+    const docChildren: FileChild[] = [];
 
     // Title
     docChildren.push(
@@ -202,5 +202,50 @@ export const ExportService = {
 
     const blob = await Packer.toBlob(doc);
     saveAs(blob, `${exam.name}.docx`);
+  },
+
+  async exportAnswersToDocx(exam: Exam, questions: Question[]) {
+    const children: FileChild[] = [
+      new Paragraph({
+        text: `ĐÁP ÁN - ${exam.name}`,
+        heading: HeadingLevel.TITLE,
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      }),
+      new Paragraph({
+        text: `Mã đề: ${exam.id.slice(0, 8)} - Ngày tạo: ${new Date(exam.createdAt).toLocaleDateString('vi-VN')}`,
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 400 },
+      }),
+    ];
+
+    questions.forEach((question, index) => {
+      let answerText: string;
+      if (question.type === 'MULTIPLE_CHOICE') {
+        const mc = question as MCQuestion;
+        const label = String.fromCharCode(65 + mc.answer);
+        answerText = `${label}. ${mc.choices[mc.answer] ?? ''}`;
+      } else if (question.type === 'TRUE_FALSE') {
+        const tf = question as TFQuestion;
+        answerText = tf.answers
+          .map((answer, answerIndex) => `${String.fromCharCode(97 + answerIndex)}. ${answer ? 'Đúng' : 'Sai'}`)
+          .join('; ');
+      } else {
+        answerText = (question as EssayQuestion).answer?.trim() || 'Chưa có đáp án mẫu.';
+      }
+
+      children.push(new Paragraph({
+        children: [
+          new TextRun({ text: `Câu ${index + 1}: `, bold: true }),
+          new TextRun({ text: answerText }),
+        ],
+        spacing: { before: 120, after: 120 },
+      }));
+    });
+
+    children.push(new Paragraph({ text: '--- HẾT ĐÁP ÁN ---', alignment: AlignmentType.CENTER, spacing: { before: 400 } }));
+    const document = new Document({ sections: [{ properties: {}, children }] });
+    const blob = await Packer.toBlob(document);
+    saveAs(blob, `${exam.name}_dap-an.docx`);
   }
 };

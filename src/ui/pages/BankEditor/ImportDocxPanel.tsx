@@ -1,14 +1,17 @@
 import { useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, FileText, Upload, X } from 'lucide-react';
+import { AlertTriangle, Upload, X } from 'lucide-react';
 import {
   DOCX_MAX_FILE_SIZE,
   DocxQuestionImportService,
   type DocxImportStage,
 } from '../../../application/import/DocxQuestionImportService';
 import type { QuestionParseResult } from '../../../core/import/parsers/QuestionDocumentParser';
+import DocxReviewWorkspace from './DocxReviewWorkspace';
 
 interface ImportDocxPanelProps {
+  bankId: string;
   onClose: () => void;
+  onImported: (count: number) => void | Promise<void>;
 }
 
 const stages: Array<{ id: DocxImportStage; label: string }> = [
@@ -18,7 +21,7 @@ const stages: Array<{ id: DocxImportStage; label: string }> = [
   { id: 'validating', label: 'Kiểm tra dữ liệu' },
 ];
 
-export default function ImportDocxPanel({ onClose }: ImportDocxPanelProps) {
+export default function ImportDocxPanel({ bankId, onClose, onImported }: ImportDocxPanelProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [stage, setStage] = useState<DocxImportStage | null>(null);
@@ -40,8 +43,6 @@ export default function ImportDocxPanel({ onClose }: ImportDocxPanelProps) {
       setStage(null);
     }
   };
-
-  const blockingErrors = result?.warnings.filter((item) => item.severity === 'error').length ?? 0;
 
   return (
     <div className="mb-8 overflow-hidden rounded-3xl border-2 border-blue-200 bg-white shadow-xl">
@@ -101,36 +102,7 @@ export default function ImportDocxPanel({ onClose }: ImportDocxPanelProps) {
           </div>
         )}
 
-        {result && (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-gray-50 p-4 text-sm">
-              <FileText size={20} className="text-blue-600" />
-              <span className="font-bold text-gray-800">{fileName}</span>
-              <span className="text-gray-500">{result.questions.length} câu hỏi</span>
-              <span className={blockingErrors ? 'font-bold text-red-600' : 'font-bold text-green-600'}>
-                {blockingErrors ? `${blockingErrors} lỗi bắt buộc` : 'Không có lỗi bắt buộc'}
-              </span>
-              <span className="ml-auto text-xs text-gray-400">{result.parserId} · {Math.round(result.confidence * 100)}%</span>
-            </div>
-
-            <div className="max-h-96 space-y-3 overflow-auto pr-1">
-              {result.questions.map((question) => (
-                <div key={`${question.key}-${question.source.blockStart}`} className={`rounded-xl border p-4 ${question.issues.length ? 'border-amber-200 bg-amber-50' : 'border-green-100 bg-green-50/40'}`}>
-                  <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase text-gray-500">
-                    {question.issues.length ? <AlertTriangle size={15} className="text-amber-600" /> : <CheckCircle2 size={15} className="text-green-600" />}
-                    <span>{question.topic}</span><span>›</span><span>{question.lesson}</span><span>›</span><span>{question.section}</span>
-                  </div>
-                  <p className="font-bold text-gray-900">Câu {question.number}. {question.content}</p>
-                  {question.issues.map((item) => <p key={item.code} className="mt-2 text-xs font-semibold text-amber-700">{item.message}</p>)}
-                </div>
-              ))}
-            </div>
-
-            <button type="button" disabled className="w-full cursor-not-allowed rounded-2xl bg-gray-200 py-3 font-bold text-gray-500">
-              Tiếp tục review và xác nhận (đang phát triển)
-            </button>
-          </div>
-        )}
+        {result && <DocxReviewWorkspace key={`${fileName}-${result.questions.length}`} bankId={bankId} fileName={fileName} result={result} onImported={onImported} />}
       </div>
     </div>
   );

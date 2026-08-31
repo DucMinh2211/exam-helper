@@ -25,6 +25,7 @@ Vì yêu cầu nhấn mạnh vào việc sử dụng **IndexedDB** và xử lý 
 
 - **Generator Service:** Chứa thuật toán chọn ngẫu nhiên câu hỏi dựa trên `tag` và số lượng yêu cầu (Requirement 3.4).
 - **Question Import:** Chứa document model trung gian, interface parser, parser registry, validation và các parser theo format. Tầng này là TypeScript thuần, không phụ thuộc React, IndexedDB hoặc thư viện đọc DOCX.
+- **Import Review:** Quản lý dữ liệu chỉnh sửa trong bộ nhớ, validation lại, trạng thái `valid`/`warning`/`error`/`confirmed`/`skipped` và điều kiện cho phép import.
 - **Import/Export Logic:** Chứa quy tắc chuyển đổi dữ liệu câu hỏi; việc đọc định dạng file cụ thể được giao cho adapter ở `infrastructure`.
 
 ##### D. Infrastructure và Data Access Layer (Tầng kỹ thuật và dữ liệu)
@@ -95,7 +96,7 @@ Giáo viên nhập ngân hàng câu hỏi từ 1 tệp (.json, .csv, .xlxs, ...)
 ### 3.4. Tạo đề thi từ ngân hàng câu hỏi
 Giáo viên tạo 1 đề thi, có thể chọn câu hỏi ngẫu nhiên (tùy chỉnh số lượng câu hỏi) hoặc câu hỏi tùy ý trong ngân hàng câu hỏi. Câu hỏi có thể được phân loại theo các nhãn (`tag`) và số lượng câu hỏi theo nhãn có thể được tùy chỉnh nếu tạo ngẫu nhiên. Tỉ lệ tạo đề thi thành công là 99%, đề thi được tạo xong sẽ hiển thị trong vòng 5s
 ### 3.5. Xuất đề thi ra tệp
-Đề thi được tạo xong có thể xuất ra tệp (.pdf, .docx, .json). Tỉ lệ thành công là 95%, tệp được xuất trong vòng 5s.
+Đề thi được tạo xong có thể xem riêng nội dung đề hoặc đáp án tương ứng. Người dùng có thể xuất đề và đáp án ra `.pdf`/`.docx`; tệp `.json` giữ đầy đủ dữ liệu câu hỏi và đáp án. Tỉ lệ thành công là 95%, tệp được xuất trong vòng 5s.
 
 ## 4. Yêu cầu phi chức năng (Non-functional Requirements)
 
@@ -333,10 +334,12 @@ exam-helper/
 │   │   ├── import/         # Model, contract và parser độc lập định dạng file
 │   │   │   ├── models/
 │   │   │   │   └── DocumentModel.ts
-│   │   │   └── parsers/
-│   │   │       ├── QuestionDocumentParser.ts
-│   │   │       ├── ParserRegistry.ts
-│   │   │       └── TrailingAnswerKeyParser.ts
+│   │   │   ├── parsers/
+│   │   │   │   ├── QuestionDocumentParser.ts
+│   │   │   │   ├── ParserRegistry.ts
+│   │   │   │   └── TrailingAnswerKeyParser.ts
+│   │   │   └── review/
+│   │   │       └── QuestionImportReview.ts
 │   │   ├── services/       # Logic nghiệp vụ chính
 │   │   │   ├── generator.ts      # Thuật toán chọn câu hỏi ngẫu nhiên
 │   │   │   ├── docx-export.ts    # Logic tạo file .docx (dùng docx)
@@ -368,7 +371,8 @@ exam-helper/
 │
 ├── tests/                  # Integration test đi qua nhiều layer
 │   └── import/
-│       └── DocxQuestionImport.integration.test.ts
+│       ├── DocxQuestionImport.integration.test.ts
+│       └── QuestionImportReview.test.ts
 ├── .env                    # Biến môi trường
 ├── tsconfig.json           # Cấu hình TypeScript
 ├── vite.config.ts          # Cấu hình Vite & PWA Plugin
