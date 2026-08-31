@@ -1,0 +1,72 @@
+# TODO
+
+## Import ngân hàng câu hỏi từ DOCX
+
+### Mục tiêu
+
+Cho phép người dùng tải file DOCX lên, tự động nhận diện format và parse câu hỏi/đáp án. Những phần sai format, thiếu dữ liệu hoặc có độ tin cậy thấp phải được đưa vào màn hình kiểm tra để người dùng sửa và xác nhận trước khi import vào ngân hàng câu hỏi.
+
+### Luồng người dùng
+
+- [ ] Thêm nút **Import DOCX** tại màn hình ngân hàng câu hỏi.
+- [ ] Cho phép chọn hoặc kéo-thả file `.docx`; kiểm tra loại file và giới hạn dung lượng.
+- [ ] Hiển thị tiến trình: đọc file → nhận diện format → parse → kiểm tra dữ liệu.
+- [ ] Hiển thị bản xem trước theo `Chủ đề → Bài → Phần → Câu hỏi`.
+- [ ] Đánh dấu rõ câu hỏi, lựa chọn hoặc đáp án bị thiếu, sai format hay có độ tin cậy thấp.
+- [ ] Cho phép người dùng sửa trực tiếp từng lỗi và xem nội dung DOCX gốc tương ứng.
+- [ ] Có thao tác **Xác nhận** cho từng lỗi và **Xác nhận tất cả mục hợp lệ**.
+- [ ] Chỉ bật nút **Import** khi không còn lỗi bắt buộc chưa được xác nhận.
+- [ ] Hiển thị tổng kết trước khi import: số câu hợp lệ, số câu đã sửa, số câu bỏ qua và số cảnh báo còn lại.
+- [ ] Import vào bank mới hoặc bank hiện tại theo lựa chọn của người dùng.
+
+### Parser foundation
+
+- [ ] Tạo `DocumentModel` trung gian, giữ đúng thứ tự paragraph và table trong DOCX.
+- [ ] Tách `DocxReader` khỏi parser nghiệp vụ để có thể tái sử dụng cho nhiều format.
+- [ ] Định nghĩa interface `QuestionDocumentParser` gồm `id`, `detect()` và `parse()`.
+- [ ] Tạo parser registry để tự chọn parser có điểm nhận diện cao nhất.
+- [ ] Mỗi kết quả parse phải trả về `questions`, `warnings`, `confidence` và vị trí block nguồn.
+- [ ] Không tự đoán hoặc tự tạo đáp án khi dữ liệu nguồn bị thiếu/mơ hồ.
+- [ ] Chuẩn hóa khoảng trắng và các biến thể phổ biến nhưng vẫn lưu lại raw text để đối chiếu.
+
+### Format đầu tiên: câu hỏi phía trên, bảng đáp án cuối DOCX
+
+- [ ] Đặt ID format: `DOCX_QUESTION_BANK_WITH_TRAILING_ANSWER_KEY_V1`.
+- [ ] Nhận diện các cấp `CHỦ ĐỀ`, `BÀI`, `PHẦN` dù khác chữ hoa/thường hoặc dấu câu.
+- [ ] Parse câu trắc nghiệm nhiều lựa chọn với các đáp án `A/B/C/D`.
+- [ ] Parse câu đúng–sai gồm các mệnh đề `a/b/c/d`.
+- [ ] Ghép các paragraph bị xuống dòng trong nội dung câu hỏi hoặc lựa chọn.
+- [ ] Nhận diện khu vực đáp án ở cuối tài liệu và nhóm bảng theo từng bài.
+- [ ] Ghép đáp án bằng khóa `(bài, loại câu hỏi, số câu)` thay vì chỉ dựa vào vị trí.
+- [ ] Chuẩn hóa các biến thể như `Câu 1.`/`Câu 1:`, `4.C`/`4C.`, `Đ`/`D`, `S`/`Sai`.
+- [ ] Cảnh báo khi trùng số câu, thiếu lựa chọn, thiếu đáp án, dư đáp án hoặc số câu không khớp bảng.
+- [ ] Kiểm thử parser bằng `exam-samples/file bộ đề sử 12.docx`.
+
+### Màn hình validate và confirm
+
+- [ ] Phân loại trạng thái: `valid`, `warning`, `error`, `confirmed` và `skipped`.
+- [ ] Bộ lọc để chỉ xem các mục cần xử lý.
+- [ ] Hiển thị lý do cảnh báo và gợi ý sửa, không âm thầm thay đổi dữ liệu.
+- [ ] Cho phép sửa loại câu hỏi, số câu, nội dung, lựa chọn và đáp án.
+- [ ] Khi người dùng sửa, chạy validation lại ngay cho câu đó.
+- [ ] Lưu quyết định xác nhận trong phiên import để không mất khi chuyển bước.
+- [ ] Yêu cầu xác nhận rõ ràng nếu người dùng muốn bỏ qua câu lỗi.
+- [ ] Không ghi vào IndexedDB trước bước xác nhận cuối cùng.
+- [ ] Import trong transaction; nếu có lỗi ghi dữ liệu thì rollback toàn bộ.
+
+### Kiến trúc mở rộng và AI tùy chọn
+
+- [ ] Cho phép đăng ký parser mới mà không sửa parser hiện có.
+- [ ] Lưu `parserId` và phiên bản parser trong báo cáo import để truy vết.
+- [ ] Thêm fixture/test riêng cho mỗi format được hỗ trợ.
+- [ ] Thiết kế `AiParserFallback` tùy chọn cho block không nhận diện được; parser quy tắc vẫn là mặc định.
+- [ ] AI chỉ trả dữ liệu theo JSON Schema và mọi kết quả AI phải qua validation như parser thường.
+- [ ] Không gửi toàn bộ tài liệu hoặc dữ liệu người dùng tới dịch vụ bên ngoài nếu chưa có sự đồng ý rõ ràng.
+
+### Điều kiện hoàn thành
+
+- [ ] File mẫu được parse thành đúng hai loại câu hỏi và ghép đúng bảng đáp án theo từng bài.
+- [ ] Mọi dữ liệu không chắc chắn đều xuất hiện trong màn hình review với vị trí nguồn tương ứng.
+- [ ] Không thể import khi còn lỗi bắt buộc chưa được sửa, xác nhận hoặc bỏ qua.
+- [ ] Thêm một format DOCX mới chỉ cần tạo parser và fixture mới.
+- [ ] Build, lint và các parser test đều chạy thành công.
