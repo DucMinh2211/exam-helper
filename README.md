@@ -1,4 +1,29 @@
-# React + TypeScript + Vite
+# Exam Helper
+
+Ứng dụng web offline-first để quản lý ngân hàng câu hỏi, tạo đề thi và nhập/xuất dữ liệu. Dữ liệu được lưu cục bộ bằng IndexedDB.
+
+## Phát triển
+
+```bash
+npm install
+npm run dev
+npm test
+npm run build
+```
+
+## Kiến trúc
+
+- `src/ui`: component và màn hình React.
+- `src/application`: điều phối use case giữa UI, business logic và adapter.
+- `src/core`: entity và business logic TypeScript thuần.
+- `src/infrastructure`: adapter cho định dạng/công nghệ như DOCX, ZIP và XML.
+- `src/data`: IndexedDB và repository.
+
+Luồng import DOCX: `ui → application → core`, trong đó application sử dụng `infrastructure/document/docx/DocxReader` để chuyển file thành model trung gian.
+
+Xem [tài liệu thiết kế](docs/design-doc.md) và [tiến độ hiện thực](todo.md).
+
+## Ghi chú Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

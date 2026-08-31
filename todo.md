@@ -8,10 +8,10 @@ Cho phép người dùng tải file DOCX lên, tự động nhận diện format
 
 ### Luồng người dùng
 
-- [ ] Thêm nút **Import DOCX** tại màn hình ngân hàng câu hỏi.
-- [ ] Cho phép chọn hoặc kéo-thả file `.docx`; kiểm tra loại file và giới hạn dung lượng.
-- [ ] Hiển thị tiến trình: đọc file → nhận diện format → parse → kiểm tra dữ liệu.
-- [ ] Hiển thị bản xem trước theo `Chủ đề → Bài → Phần → Câu hỏi`.
+- [x] Thêm nút **Import DOCX** tại màn hình ngân hàng câu hỏi.
+- [x] Cho phép chọn hoặc kéo-thả file `.docx`; kiểm tra loại file và giới hạn dung lượng.
+- [x] Hiển thị tiến trình: đọc file → nhận diện format → parse → kiểm tra dữ liệu.
+- [x] Hiển thị bản xem trước theo `Chủ đề → Bài → Phần → Câu hỏi`.
 - [ ] Đánh dấu rõ câu hỏi, lựa chọn hoặc đáp án bị thiếu, sai format hay có độ tin cậy thấp.
 - [ ] Cho phép người dùng sửa trực tiếp từng lỗi và xem nội dung DOCX gốc tương ứng.
 - [ ] Có thao tác **Xác nhận** cho từng lỗi và **Xác nhận tất cả mục hợp lệ**.
@@ -21,26 +21,26 @@ Cho phép người dùng tải file DOCX lên, tự động nhận diện format
 
 ### Parser foundation
 
-- [ ] Tạo `DocumentModel` trung gian, giữ đúng thứ tự paragraph và table trong DOCX.
-- [ ] Tách `DocxReader` khỏi parser nghiệp vụ để có thể tái sử dụng cho nhiều format.
-- [ ] Định nghĩa interface `QuestionDocumentParser` gồm `id`, `detect()` và `parse()`.
-- [ ] Tạo parser registry để tự chọn parser có điểm nhận diện cao nhất.
-- [ ] Mỗi kết quả parse phải trả về `questions`, `warnings`, `confidence` và vị trí block nguồn.
-- [ ] Không tự đoán hoặc tự tạo đáp án khi dữ liệu nguồn bị thiếu/mơ hồ.
-- [ ] Chuẩn hóa khoảng trắng và các biến thể phổ biến nhưng vẫn lưu lại raw text để đối chiếu.
+- [x] Tạo `DocumentModel` trung gian, giữ đúng thứ tự paragraph và table trong DOCX.
+- [x] Tách `DocxReader` khỏi parser nghiệp vụ để có thể tái sử dụng cho nhiều format.
+- [x] Định nghĩa interface `QuestionDocumentParser` gồm `id`, `detect()` và `parse()`.
+- [x] Tạo parser registry để tự chọn parser có điểm nhận diện cao nhất.
+- [x] Mỗi kết quả parse phải trả về `questions`, `warnings`, `confidence` và vị trí block nguồn.
+- [x] Không tự đoán hoặc tự tạo đáp án khi dữ liệu nguồn bị thiếu/mơ hồ.
+- [x] Chuẩn hóa khoảng trắng và các biến thể phổ biến nhưng vẫn lưu lại raw text để đối chiếu.
 
 ### Format đầu tiên: câu hỏi phía trên, bảng đáp án cuối DOCX
 
-- [ ] Đặt ID format: `DOCX_QUESTION_BANK_WITH_TRAILING_ANSWER_KEY_V1`.
-- [ ] Nhận diện các cấp `CHỦ ĐỀ`, `BÀI`, `PHẦN` dù khác chữ hoa/thường hoặc dấu câu.
-- [ ] Parse câu trắc nghiệm nhiều lựa chọn với các đáp án `A/B/C/D`.
-- [ ] Parse câu đúng–sai gồm các mệnh đề `a/b/c/d`.
-- [ ] Ghép các paragraph bị xuống dòng trong nội dung câu hỏi hoặc lựa chọn.
-- [ ] Nhận diện khu vực đáp án ở cuối tài liệu và nhóm bảng theo từng bài.
-- [ ] Ghép đáp án bằng khóa `(bài, loại câu hỏi, số câu)` thay vì chỉ dựa vào vị trí.
-- [ ] Chuẩn hóa các biến thể như `Câu 1.`/`Câu 1:`, `4.C`/`4C.`, `Đ`/`D`, `S`/`Sai`.
-- [ ] Cảnh báo khi trùng số câu, thiếu lựa chọn, thiếu đáp án, dư đáp án hoặc số câu không khớp bảng.
-- [ ] Kiểm thử parser bằng `exam-samples/file bộ đề sử 12.docx`.
+- [x] Đặt ID format: `DOCX_QUESTION_BANK_WITH_TRAILING_ANSWER_KEY_V1`.
+- [x] Nhận diện các cấp `CHỦ ĐỀ`, `BÀI`, `PHẦN` dù khác chữ hoa/thường hoặc dấu câu.
+- [x] Parse câu trắc nghiệm nhiều lựa chọn với các đáp án `A/B/C/D`.
+- [x] Parse câu đúng–sai gồm các mệnh đề `a/b/c/d`.
+- [x] Ghép các paragraph bị xuống dòng trong nội dung câu hỏi hoặc lựa chọn.
+- [x] Nhận diện khu vực đáp án ở cuối tài liệu và nhóm bảng theo từng bài.
+- [x] Ghép đáp án bằng khóa `(bài, loại câu hỏi, số câu)` thay vì chỉ dựa vào vị trí.
+- [x] Chuẩn hóa các biến thể như `Câu 1.`/`Câu 1:`, `4.C`/`4C.`, `Đ`/`D`, `S`/`Sai`.
+- [x] Cảnh báo khi trùng số câu, thiếu lựa chọn, thiếu đáp án, dư đáp án hoặc số câu không khớp bảng.
+- [x] Kiểm thử parser bằng `exam-samples/file bộ đề sử 12.docx`.
 
 ### Màn hình validate và confirm
 
@@ -56,9 +56,9 @@ Cho phép người dùng tải file DOCX lên, tự động nhận diện format
 
 ### Kiến trúc mở rộng và AI tùy chọn
 
-- [ ] Cho phép đăng ký parser mới mà không sửa parser hiện có.
-- [ ] Lưu `parserId` và phiên bản parser trong báo cáo import để truy vết.
-- [ ] Thêm fixture/test riêng cho mỗi format được hỗ trợ.
+- [x] Cho phép đăng ký parser mới mà không sửa parser hiện có.
+- [x] Lưu `parserId` và phiên bản parser trong báo cáo import để truy vết.
+- [x] Thêm fixture/test riêng cho mỗi format được hỗ trợ.
 - [ ] Thiết kế `AiParserFallback` tùy chọn cho block không nhận diện được; parser quy tắc vẫn là mặc định.
 - [ ] AI chỉ trả dữ liệu theo JSON Schema và mọi kết quả AI phải qua validation như parser thường.
 - [ ] Không gửi toàn bộ tài liệu hoặc dữ liệu người dùng tới dịch vụ bên ngoài nếu chưa có sự đồng ý rõ ràng.

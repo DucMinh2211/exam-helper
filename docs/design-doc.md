@@ -15,18 +15,32 @@ Vì yêu cầu nhấn mạnh vào việc sử dụng **IndexedDB** và xử lý 
 ##### A. Presentation Layer (Giao diện)
 
 - Sử dụng các Component để hiển thị danh sách câu hỏi, form tạo câu hỏi, và trình xem trước đề thi (PDF).
-    
 
-##### B. Business Logic Layer (Tầng nghiệp vụ)
+##### B. Application Layer (Điều phối use case)
+
+- Điều phối một luồng người dùng hoàn chỉnh, ví dụ: kiểm tra file DOCX → đọc tài liệu → chọn parser → tạo báo cáo preview.
+- Có thể sử dụng cả business logic trong `core` và adapter kỹ thuật trong `infrastructure`; không chứa UI hoặc thao tác trực tiếp với IndexedDB.
+
+##### C. Business Logic Layer (Tầng nghiệp vụ)
 
 - **Generator Service:** Chứa thuật toán chọn ngẫu nhiên câu hỏi dựa trên `tag` và số lượng yêu cầu (Requirement 3.4).
-    
-- **Import/Export Service:** Xử lý logic đọc/ghi file CSV/XLSX bằng các thư viện như `SheetJS (xlsx)` hoặc `PapaParse`.
-    
+- **Question Import:** Chứa document model trung gian, interface parser, parser registry, validation và các parser theo format. Tầng này là TypeScript thuần, không phụ thuộc React, IndexedDB hoặc thư viện đọc DOCX.
+- **Import/Export Logic:** Chứa quy tắc chuyển đổi dữ liệu câu hỏi; việc đọc định dạng file cụ thể được giao cho adapter ở `infrastructure`.
 
-##### C. Data Access Layer (Tầng dữ liệu)
+##### D. Infrastructure và Data Access Layer (Tầng kỹ thuật và dữ liệu)
 
-- Đây là nơi bạn làm việc với **IndexedDB**. Thay vì gọi API `fetch`, bạn gọi các hàm trong tầng này để lưu `Bank` và `Question`.
+- `infrastructure` chứa adapter cho công nghệ/định dạng cụ thể như DOCX, ZIP và XML.
+- `data` làm việc với **IndexedDB**. Application service gọi repository để lưu `Bank` và `Question` sau khi người dùng xác nhận.
+
+Quy tắc phụ thuộc cho luồng import:
+
+```text
+ui → application → core
+          ↓
+    infrastructure → core
+```
+
+`core` không được import từ `ui`, `application`, `infrastructure` hoặc `data`.
 #### 1.4.5. Sơ đồ kiến trúc
 ```mermaid
 graph TD
@@ -36,9 +50,18 @@ graph TD
         ExamGen[Bộ tạo Đề thi]
     end
 
-    subgraph Service_Layer[Tầng Nghiệp vụ - Logic]
+    subgraph Application_Layer[Tầng Application - Điều phối]
+        ImportFlow[Luồng import và review]
+    end
+
+    subgraph Core_Layer[Tầng Core - Nghiệp vụ thuần]
         Algo[Thuật toán Random & Filter]
-        Converter[Chuyển đổi CSV/XLSX/PDF]
+        Parser[Document Model và Parser Registry]
+        Converter[Quy tắc chuyển đổi dữ liệu]
+    end
+
+    subgraph Infrastructure_Layer[Tầng Infrastructure]
+        DocxReader[DOCX Reader / ZIP / XML]
     end
 
     subgraph Storage_Layer[Tầng Dữ liệu]
@@ -46,8 +69,11 @@ graph TD
         DB[(IndexedDB - Trình duyệt)]
     end
 
-    UI_Layer --> Service_Layer
-    Service_Layer --> Storage_Layer
+    UI_Layer --> Application_Layer
+    Application_Layer --> Core_Layer
+    Application_Layer --> Infrastructure_Layer
+    Application_Layer --> Storage_Layer
+    Infrastructure_Layer --> Core_Layer
 ```
 
 ## 2. Các bên liên quan (Stakeholders)
@@ -298,14 +324,30 @@ exam-helper/
 ├── public/                 # Tài nguyên tĩnh (Logo, Manifest, Service Worker)
 ├── src/
 │   ├── assets/             # Hình ảnh, font, styles toàn cục
+│   ├── application/        # Điều phối use case giữa UI, core và adapter
+│   │   └── import/
+│   │       └── DocxQuestionImportService.ts
+│   │
 │   ├── core/               # Tầng Business Logic (Pure TypeScript)
 │   │   ├── entities/       # Khai báo Class/Interface (Bank, Question, Exam)
+│   │   ├── import/         # Model, contract và parser độc lập định dạng file
+│   │   │   ├── models/
+│   │   │   │   └── DocumentModel.ts
+│   │   │   └── parsers/
+│   │   │       ├── QuestionDocumentParser.ts
+│   │   │       ├── ParserRegistry.ts
+│   │   │       └── TrailingAnswerKeyParser.ts
 │   │   ├── services/       # Logic nghiệp vụ chính
 │   │   │   ├── generator.ts      # Thuật toán chọn câu hỏi ngẫu nhiên
 │   │   │   ├── docx-export.ts    # Logic tạo file .docx (dùng docx)
 │   │   │   ├── excel-handler.ts  # Logic đọc/ghi file Excel (dùng SheetJS)
 │   │   │   └── pdf-export.ts     # Logic tạo file PDF
 │   │   └── utils/          # Các hàm tiện ích (Format date, string helper)
+│   │
+│   ├── infrastructure/     # Adapter định dạng và công nghệ bên ngoài
+│   │   └── document/
+│   │       └── docx/
+│   │           └── DocxReader.ts
 │   │
 │   ├── data/               # Tầng Data Access (Làm việc với DB)
 │   │   ├── db.ts           # Khởi tạo Dexie.js (Schema & Stores)
@@ -324,10 +366,11 @@ exam-helper/
 │   ├── main.tsx            # Entry point
 │   └── service-worker.ts   # Cấu hình PWA để chạy offline
 │
-├── tests/                  # Unit tests cho thuật toán tạo đề
+├── tests/                  # Integration test đi qua nhiều layer
+│   └── import/
+│       └── DocxQuestionImport.integration.test.ts
 ├── .env                    # Biến môi trường
 ├── tsconfig.json           # Cấu hình TypeScript
 ├── vite.config.ts          # Cấu hình Vite & PWA Plugin
 └── package.json
 ```
-

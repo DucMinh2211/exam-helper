@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Tag as TagIcon, X, CheckCircle2, XCircle, PlusCircle, Edit2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Tag as TagIcon, X, CheckCircle2, XCircle, PlusCircle, Edit2, FileUp } from 'lucide-react';
 import { BankService } from '../../../core/services/BankService';
 import { QuestionService } from '../../../core/services/QuestionService';
 import type { Bank } from '../../../core/entities/Bank';
 import type { Question, QuestionType, MCQuestion, TFQuestion } from '../../../core/entities/Question';
+import ImportDocxPanel from './ImportDocxPanel';
 
 const BankEditor: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ const BankEditor: React.FC = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [showDocxImport, setShowDocxImport] = useState(false);
   
   // Form State
   const [title, setTitle] = useState('');
@@ -25,20 +27,20 @@ const BankEditor: React.FC = () => {
   const [mcCorrectAnswer, setMcCorrectAnswer] = useState<number>(0); // For MC
   const [tfAnswers, setTfAnswers] = useState<boolean[]>([false, false, false, false]); // For TF
 
-  useEffect(() => {
-    if (id) {
-      loadData(id);
-    }
-  }, [id]);
-
-  const loadData = async (bankId: string) => {
+  async function loadData(bankId: string) {
     const bankData = await BankService.getBankDetails(bankId);
     if (bankData) {
       setBank(bankData);
       const questionList = await QuestionService.getQuestionsByBank(bankId);
       setQuestions(questionList);
     }
-  };
+  }
+
+  useEffect(() => {
+    if (id) {
+      void Promise.resolve(id).then(loadData);
+    }
+  }, [id]);
 
   const resetForm = () => {
     setTitle('');
@@ -90,7 +92,11 @@ const BankEditor: React.FC = () => {
       tags,
     };
 
-    let finalData: any = baseData;
+    let finalData: Omit<Question, 'id' | 'createdAt'> & {
+      choices?: string[];
+      answer?: number;
+      answers?: boolean[];
+    } = baseData;
 
     if (type === 'MULTIPLE_CHOICE') {
       finalData = {
@@ -189,14 +195,23 @@ const BankEditor: React.FC = () => {
         <Link to="/" className="p-2 hover:bg-white shadow-sm border rounded-full transition-all text-gray-600">
           <ArrowLeft size={20} />
         </Link>
-        <div>
+        <div className="flex-1">
           <h1 className="text-3xl font-extrabold text-gray-900">{bank.name}</h1>
           <p className="text-gray-500 font-medium flex items-center gap-2">
             <TagIcon size={14} />
             {questions.length} câu hỏi trong ngân hàng
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowDocxImport((visible) => !visible)}
+          className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 font-bold text-blue-700 transition-colors hover:bg-blue-100"
+        >
+          <FileUp size={19} /> Import DOCX
+        </button>
       </div>
+
+      {showDocxImport && <ImportDocxPanel onClose={() => setShowDocxImport(false)} />}
 
       <div className="flex-1 overflow-auto space-y-6 mb-8 pr-2">
         {questions.map((q, idx) => (
