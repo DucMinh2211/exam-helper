@@ -3,9 +3,23 @@ export interface SourceRange {
   blockEnd: number;
 }
 
+export interface TextRange {
+  paragraph: number;
+  start: number;
+  end: number;
+}
+
+export interface DocumentLine {
+  text: string;
+  range: TextRange;
+  marked: Array<{ start: number; end: number }>;
+  automaticLabel?: string;
+}
+
 interface DocumentBlockBase {
   index: number;
   rawText: string;
+  lines?: DocumentLine[];
 }
 
 export interface ParagraphBlock extends DocumentBlockBase {
@@ -14,6 +28,7 @@ export interface ParagraphBlock extends DocumentBlockBase {
 }
 
 export interface TableBlock extends DocumentBlockBase {
+  cellLines?: DocumentLine[][][];
   type: 'table';
   rows: string[][];
 }

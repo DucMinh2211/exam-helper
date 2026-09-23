@@ -120,6 +120,13 @@ const Dashboard: React.FC = () => {
               
               {openMenuId === bank.id && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-10 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setOpenMenuId(null);
+                      void BankExportImportService.exportToDocx(bank.id).catch((error: unknown) => alert(error instanceof Error ? error.message : 'Không thể xuất DOCX.'));
+                    }}
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-blue-50 text-gray-700"
+                  >Xuất Word (.docx)</button>
                   <button 
                     onClick={() => { BankExportImportService.exportToExcel(bank.id); setOpenMenuId(null); }}
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-left text-sm hover:bg-green-50 hover:text-green-700 text-gray-700"

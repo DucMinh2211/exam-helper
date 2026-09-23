@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Check, CheckCheck, Eye, FileText, SkipForward } from 'lucide-react';
 import { DocxQuestionImportService } from '../../../application/import/DocxQuestionImportService';
 import {
@@ -13,6 +13,7 @@ import {
   type ReviewStatus,
 } from '../../../core/import/review/QuestionImportReview';
 import type { QuestionParseResult } from '../../../core/import/parsers/QuestionDocumentParser';
+import type { DocxImportOptions, DocxImportOperation } from '../../../application/import/DocxImportPlan';
 
 type ReviewFilter = 'all' | 'needs-review' | ReviewStatus;
 
@@ -20,6 +21,8 @@ interface DocxReviewWorkspaceProps {
   bankId: string;
   fileName: string;
   result: QuestionParseResult;
+  options: DocxImportOptions;
+  onBusyChange: (busy: boolean) => void;
   onImported: (count: number) => void | Promise<void>;
 }
 
@@ -45,7 +48,7 @@ function hasBlockingError(item: QuestionReviewItem): boolean {
   return item.issues.some((issue) => issue.severity === 'error');
 }
 
-export default function DocxReviewWorkspace({ bankId, fileName, result, onImported }: DocxReviewWorkspaceProps) {
+export default function DocxReviewWorkspace({ bankId, fileName, result, options, onBusyChange, onImported }: DocxReviewWorkspaceProps) {
   const [session, setSession] = useState(() => createQuestionImportReview(result));
   const [filter, setFilter] = useState<ReviewFilter>('needs-review');
   const [selectedId, setSelectedId] = useState(() => {
@@ -54,6 +57,21 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
   });
   const [message, setMessage] = useState('');
   const [importing, setImporting] = useState(false);
+  const [planState, setPlanState] = useState<{ items: QuestionReviewItem[]; options: DocxImportOptions; operations: DocxImportOperation[]; error: string } | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void DocxQuestionImportService.plan(bankId, session.items, result.sourceDocx, options).then(plan => {
+      if (!cancelled) setPlanState({ items: session.items, options, operations: plan.operations, error: '' });
+    }).catch((error: unknown) => {
+      if (!cancelled) setPlanState({ items: session.items, options, operations: [], error: error instanceof Error ? error.message : 'Không thể đối chiếu file.' });
+    });
+    return () => { cancelled = true; };
+  }, [bankId, session.items, result.sourceDocx, options]);
+  const planReady = planState?.items === session.items && planState.options === options;
+  const operations = planReady ? planState.operations : [];
+  const planError = planReady ? planState.error : '';
+  const conflict = operations.some(op => op.action === 'conflict');
+  const actionLabels = { new: 'Thêm mới', update: 'Cập nhật', unchanged: 'Giữ nguyên', skipped: 'Bỏ qua', conflict: 'Trùng đối chiếu' };
 
   const counts = useMemo(() => session.items.reduce<Record<ReviewStatus, number>>((summary, item) => {
     summary[item.status] += 1;
@@ -67,6 +85,7 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
   }), [filter, session.items]);
 
   const selected = session.items.find((item) => item.id === selectedId) ?? visibleItems[0] ?? session.items[0];
+  const selectedOperation = operations.find(op => op.itemId === selected?.id);
   const confirmedCount = session.items.filter((item) => item.decision === 'confirmed').length;
   const fixedCount = session.items.filter((item) => item.wasEdited && item.decision === 'confirmed').length;
   const sourceWarningCount = session.sourceWarnings.filter((warning) => warning.severity === 'warning').length;
@@ -105,14 +124,16 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
 
   const importQuestions = async () => {
     setImporting(true);
+    onBusyChange(true);
     setMessage('');
     try {
-      const imported = await DocxQuestionImportService.importConfirmed(bankId, session.items);
+      const imported = await DocxQuestionImportService.importConfirmed(bankId, session.items, result.sourceDocx, options);
       await onImported(imported.length);
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : 'Không thể import câu hỏi.');
     } finally {
       setImporting(false);
+      onBusyChange(false);
     }
   };
 
@@ -121,7 +142,7 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
   const answerArray = Array.isArray(selected.question.answer) ? selected.question.answer : [null, null, null, null];
 
   return (
-    <div className="space-y-4">
+    <fieldset disabled={importing} className="space-y-4 min-w-0">
       <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-gray-50 p-4 text-sm">
         <FileText size={20} className="text-blue-600" />
         <span className="font-bold text-gray-800">{fileName}</span>
@@ -174,6 +195,7 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusStyle[item.status].className}`}>{statusStyle[item.status].label}</span>
               </div>
               <p className="mt-1 truncate text-xs text-gray-500">{item.question.lesson || 'Chưa xác định bài'}</p>
+              {operations.find(op => op.itemId === item.id) && <p className="mt-1 text-xs font-semibold text-blue-700">{actionLabels[operations.find(op => op.itemId === item.id)!.action]}</p>}
               <p className="mt-1 line-clamp-2 text-xs text-gray-600">{item.question.content || 'Chưa có nội dung'}</p>
             </button>
           ))}
@@ -184,6 +206,7 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
             <span>{selected.question.topic || 'Chưa có chủ đề'}</span><span>›</span>
             <span>{selected.question.lesson || 'Chưa có bài'}</span><span>›</span>
             <span>{selected.question.section || 'Chưa có phần'}</span>
+            {selected.question.level && <span>{selected.question.level}</span>}
             <span className={`ml-auto rounded-full px-3 py-1 ${statusStyle[selected.status].className}`}>{statusStyle[selected.status].label}</span>
           </div>
 
@@ -197,6 +220,13 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
               ))}
             </div>
           )}
+          {selectedOperation && <div className="rounded-xl border bg-blue-50 p-3 text-sm">
+            <strong>{actionLabels[selectedOperation.action]}</strong>
+            {selectedOperation.changes.length > 0 && <p>Thay đổi: {selectedOperation.changes.join(', ')}.</p>}
+            {selectedOperation.error && <p className="mt-1 text-red-700">{selectedOperation.error}</p>}
+            {selectedOperation.existing && <p className="mt-2 text-gray-600">Tags hiện tại: {selectedOperation.existing.tags.join(', ') || '(trống)'}</p>}
+            <p className="mt-1">Tags sau khi nhập: {selectedOperation.data?.tags.join(', ') || '(trống)'}</p>
+          </div>}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="text-xs font-black uppercase text-gray-500">
@@ -318,6 +348,9 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
 
       <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
         <h3 className="font-black text-gray-900">Tổng kết trước khi import</h3>
+        <p className="mt-2 text-sm text-blue-800" role="status">{!planReady ? 'Đang đối chiếu với Bank…' : ['update', 'new', 'unchanged'].map(action => `${operations.filter(op => op.action === action && session.items.find(item => item.id === op.itemId)?.decision === 'confirmed').length} ${actionLabels[action as keyof typeof actionLabels].toLowerCase()}`).join(' · ')}</p>
+        {planError && <p role="alert" className="mt-2 text-sm text-red-700">{planError}</p>}
+        {conflict && <p role="alert" className="mt-2 text-sm text-red-700">Có câu bị trùng đối chiếu. Chọn câu để xem chi tiết và bỏ qua bản trùng.</p>}
         <div className="mt-3 grid grid-cols-2 gap-3 text-center text-sm md:grid-cols-5">
           <div><strong className="block text-xl text-blue-700">{confirmedCount}</strong>Đã xác nhận</div>
           <div><strong className="block text-xl text-purple-700">{fixedCount}</strong>Đã sửa</div>
@@ -327,14 +360,14 @@ export default function DocxReviewWorkspace({ bankId, fileName, result, onImport
         </div>
         <button
           type="button"
-          disabled={!canImportReview(session.items) || importing}
+          disabled={!canImportReview(session.items) || importing || !planReady || Boolean(planError) || conflict}
           onClick={() => void importQuestions()}
           className="mt-4 w-full rounded-2xl bg-green-600 py-3 font-black text-white shadow-lg shadow-green-100 hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
         >
-          {importing ? 'Đang import trong transaction...' : `Import ${confirmedCount} câu vào ngân hàng hiện tại`}
+          {importing ? 'Đang lưu…' : options.mode === 'update' ? 'Áp dụng các thay đổi đã xác nhận' : `Thêm ${confirmedCount} câu vào ngân hàng`}
         </button>
         {!canImportReview(session.items) && <p className="mt-2 text-center text-xs text-gray-500">Hãy sửa hoặc bỏ qua các lỗi, sau đó xác nhận tất cả câu sẽ import.</p>}
       </div>
-    </div>
+    </fieldset>
   );
 }

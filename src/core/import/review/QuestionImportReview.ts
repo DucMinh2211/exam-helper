@@ -12,6 +12,8 @@ export interface ReviewValidationIssue {
 }
 
 export interface EditableImportedQuestion {
+  level?: string;
+  tags?: string[];
   topic?: string;
   lesson?: string;
   section?: string;
@@ -144,6 +146,8 @@ export function revalidateReviewItems(items: QuestionReviewItem[]): QuestionRevi
 export function createQuestionImportReview(result: QuestionParseResult): QuestionImportReviewSession {
   const items = result.questions.map<QuestionReviewItem>((question, index) => {
     const editable: EditableImportedQuestion = {
+      level: question.level,
+      tags: question.tags ? [...question.tags] : undefined,
       topic: question.topic,
       lesson: question.lesson,
       section: question.section,

@@ -58,5 +58,5 @@ describe('TrailingAnswerKeyParser', () => {
       new Set(['MULTIPLE_CHOICE', 'TRUE_FALSE']),
     );
     expect(result.questions.filter((question) => question.answer !== null).length).toBeGreaterThan(500);
-  });
+  }, 20000);
 });

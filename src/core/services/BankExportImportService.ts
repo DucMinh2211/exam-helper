@@ -3,8 +3,36 @@ import * as XLSX from 'xlsx';
 import { BankRepository } from '../../data/repositories/BankRepository';
 import { QuestionRepository } from '../../data/repositories/QuestionRepository';
 import type { MCQuestion, TFQuestion, EssayQuestion } from '../entities/Question';
+import JSZip from 'jszip';
+import { v4 as uuidv4 } from 'uuid';
+import { docxBlob, exportNewDocx, exportSourceDocx } from '../../infrastructure/document/docx/DocxBankWriter';
 
 export const BankExportImportService = {
+  async exportToDocx(bankId: string) {
+    const bank = await BankRepository.getById(bankId);
+    if (!bank) throw new Error('Không tìm thấy ngân hàng.');
+    const questions = await QuestionRepository.getByBankId(bankId);
+    const sources = (bank.docxSources ?? []).map(source => ({ ...source, id: source.id ?? uuidv4() }));
+    if (sources.some((source, i) => source.id !== bank.docxSources?.[i].id)) await BankRepository.update(bankId, { docxSources: sources });
+    const safeName = (name: string) => Array.from(name).map((char) => char.charCodeAt(0) < 32 || /[<>:"/\\|?*]/.test(char) ? '_' : char).join('');
+    if (!sources.length) {
+      saveAs(docxBlob(await exportNewDocx(bank.name, questions, { bankId, sourceId: `bank-${bankId}` })), `${safeName(bank.name)}.docx`);
+      return;
+    }
+    const linked = new Set(sources.flatMap((source) => source.questions.map((q) => q.questionId)));
+    const additions = questions.filter((q) => !linked.has(q.id));
+    if (sources.length === 1) {
+      saveAs(docxBlob(await exportSourceDocx(sources[0], questions, additions, { bankId, sourceId: sources[0].id })), safeName(sources[0].name));
+      return;
+    }
+    // Each source retains its own page setup, styles, headers and media.
+    const archive = new JSZip();
+    for (const [index, source] of sources.entries()) {
+      archive.file(`${index + 1}_${safeName(source.name)}`, await exportSourceDocx(source, questions, [], { bankId, sourceId: source.id }));
+    }
+    if (additions.length) archive.file('Cau_hoi_bo_sung.docx', await exportNewDocx(bank.name, additions, { bankId, sourceId: `bank-${bankId}` }));
+    saveAs(await archive.generateAsync({ type: 'blob' }), `${safeName(bank.name)}_DOCX.zip`);
+  },
   /**
    * Export a Bank and its questions to a JSON file.
    */
@@ -94,14 +122,24 @@ export const BankExportImportService = {
 
     // Create new bank to avoid ID collisions
     const newBank = await BankRepository.create(data.bank.name + ' (Imported)', data.bank.description);
+    const importedIds = new Map<string, string>();
     
     for (const q of data.questions) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { id, bankId, createdAt, ...rest } = q;
-        await QuestionRepository.create({
+        const imported = await QuestionRepository.create({
           ...rest,
           bankId: newBank.id
         });
+        importedIds.set(id, imported.id);
+    }
+    if (Array.isArray(data.bank.docxSources)) {
+      await BankRepository.update(newBank.id, {
+        docxSources: data.bank.docxSources.map((source: import('../entities/Bank').BankDocxSource) => ({
+          ...source,
+          questions: source.questions.map((entry) => ({ ...entry, questionId: entry.questionId ? importedIds.get(entry.questionId) : undefined })),
+        })),
+      });
     }
   },
 

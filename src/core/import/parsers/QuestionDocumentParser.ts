@@ -1,5 +1,5 @@
 import type { QuestionType } from '../../entities/Question';
-import type { DocumentModel, SourceRange } from '../models/DocumentModel';
+import type { DocumentModel, SourceRange, TextRange } from '../models/DocumentModel';
 
 export type ImportIssueSeverity = 'warning' | 'error';
 
@@ -17,6 +17,13 @@ export interface ParserDetection {
 }
 
 export interface ParsedQuestion {
+  documentQuestionId?: string;
+  level?: string;
+  tags?: string[];
+  tagFields?: TextRange[];
+  answerFields?: Array<TextRange | null>;
+  answerNumberFields?: TextRange[];
+  fields?: { title: TextRange[]; content: TextRange[]; choices: TextRange[][]; labels: TextRange[][] };
   key: string;
   topic?: string;
   lesson?: string;
@@ -33,6 +40,7 @@ export interface ParsedQuestion {
 }
 
 export interface QuestionParseResult {
+  sourceDocx?: { name: string; base64: string; bankId?: string; sourceId?: string };
   parserId: string;
   parserVersion: string;
   questions: ParsedQuestion[];
